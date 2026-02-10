@@ -1,13 +1,64 @@
+version: '3.8'
 
 services:
   api:
-    container_name: sipa
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pavis-api
     ports:
-      - "30199:8080"
+      - "5000:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=miapi;Username=miapi;Password=secret
-      Jwt__Key: supersecretkey
-    restart: unless-stopped
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=PavisDb;Username=postgres; Password=postgres; Port=5432
+      - JwtSettings__SecretKey=YourSuperSecretKeyForDevelopmentOnly!
+      - JwtSettings__Issuer=Pavis.Api
+      - JwtSettings__Audience=Pavis.Client
+      - JwtSettings__ExpirationMinutes=15
+      - JwtSettings__RefreshTokenExpirationDays=7
+      - ASPNETCORE_ENVIRONMENT=Development
+      - EmailSettings__SmtpServer=mailhog
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__FromEmail=noreply@pavis.com
+      - EmailSettings__FromName=PAVIS System
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - default
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: pavis-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: PavisDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: pavis-mailhog
+    ports:
+      - "1025:1025" # Puerto SMTP
+      - "8025:8025" # Puerto de la interfaz web
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge
