@@ -42,10 +42,11 @@ public class RegisterRequest
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Rol del usuario (ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION)
+    /// Rol del usuario (enviar como string/texto)
+    /// Valores válidos: ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION
     /// </summary>
     /// <example>ADMIN</example>
-    public Pavis.Domain.Enums.UserRole Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -119,4 +120,70 @@ public class RefreshTokenRequest
     /// Token JWT a validar
     /// </summary>
     public string Token { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Request para obtener usuarios con paginación y filtros
+/// </summary>
+public class GetAllUsersRequest
+{
+    /// <summary>
+    /// Número de página (default: 1)
+    /// </summary>
+    public int Page { get; set; } = 1;
+
+    /// <summary>
+    /// Cantidad de elementos por página (default: 10)
+    /// </summary>
+    public int Limit { get; set; } = 10;
+
+    /// <summary>
+    /// Filtro por rol (opcional)
+    /// </summary>
+    /// <example>ADMIN</example>
+    public string? Role { get; set; }
+
+    /// <summary>
+    /// Término de búsqueda en nombre o email (opcional)
+    /// </summary>
+    /// <example>juan</example>
+    public string? Search { get; set; }
+
+    /// <summary>
+    /// Filtro por estado (opcional)
+    /// </summary>
+    /// <example>ACTIVE</example>
+    public string? Status { get; set; }
+}
+
+/// <summary>
+/// Response paginado genérico
+/// </summary>
+/// <typeparam name="T">Tipo de datos</typeparam>
+public class PagedResponse<T>
+{
+    /// <summary>
+    /// Lista de datos
+    /// </summary>
+    public IEnumerable<T> Data { get; set; } = Enumerable.Empty<T>();
+
+    /// <summary>
+    /// Número total de elementos
+    /// </summary>
+    public int Total { get; set; }
+
+    /// <summary>
+    /// Número de página actual
+    /// </summary>
+    public int Page { get; set; }
+
+    /// <summary>
+    /// Cantidad de elementos por página
+    /// </summary>
+    public int Limit { get; set; }
+
+    /// <summary>
+    /// Total de páginas
+    /// </summary>
+    public int TotalPages => (int)Math.Ceiling((double)Total / Limit);
 }

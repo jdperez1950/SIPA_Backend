@@ -189,4 +189,60 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Obtener usuarios del sistema con paginación y filtros (solo ADMIN)
+    /// </summary>
+    /// <param name="page">Número de página (default: 1)</param>
+    /// <param name="limit">Elementos por página (default: 10)</param>
+    /// <param name="role">Filtro por rol (ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION)</param>
+    /// <param name="search">Búsqueda en nombre o email</param>
+    /// <param name="status">Filtro por estado (ACTIVE, INACTIVE)</param>
+    /// <returns>Lista paginada de usuarios</returns>
+    /// <response code="200">Usuarios obtenidos exitosamente</response>
+    /// <response code="401">Usuario no autenticado</response>
+    /// <response code="403">Usuario no tiene permisos de administrador</response>
+    /// <response code="500">Error interno del servidor</response>
+    /// <remarks>
+    /// Ejemplos de uso:
+    /// GET /api/auth/users?page=1&limit=10
+    /// GET /api/auth/users?role=ASESOR
+    /// GET /api/auth/users?search=juan&page=1&limit=20
+    /// GET /api/auth/users?status=ACTIVE&role=ADMIN
+    /// </remarks>
+    [HttpGet("users")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDto>>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDto>>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<UserDto>>>> GetAllUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10,
+        [FromQuery] string? role = null,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving users with filters - Page: {Page}, Limit: {Limit}, Role: {Role}, Search: {Search}, Status: {Status}",
+                page, limit, role, search, status);
+
+            var request = new GetAllUsersRequest
+            {
+                Page = page,
+                Limit = limit,
+                Role = role,
+                Search = search,
+                Status = status
+            };
+
+            var result = await _authService.GetUsersAsync(request);
+            return Ok(ApiResponse<PagedResponse<UserDto>>.Ok(result, "Usuarios obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving users");
+            return StatusCode(500, ApiResponse<PagedResponse<UserDto>>.Fail("Error interno del servidor"));
+        }
+    }
 }

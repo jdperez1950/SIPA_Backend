@@ -19,6 +19,7 @@ using Pavis.Infrastructure.Services;
 using Pavis.Infrastructure.Data.Seeding;
 using FluentValidation;
 using Pavis.WebApi.Middleware;
+using Pavis.WebApi.Swagger;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +51,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
+    // Deshabilitar referencias de esquemas para enums (mostrar como string)
+    c.UseInlineDefinitionsForEnums();
+
     // Incluir documentación XML
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -57,6 +61,9 @@ builder.Services.AddSwaggerGen(c =>
     {
         c.IncludeXmlComments(xmlPath);
     }
+
+    // Agregar filter para corregir el tipo de Role (string en lugar de enum)
+    c.SchemaFilter<RolePropertySchemaFilter>();
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -142,7 +149,21 @@ builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4200",
+                "https://colombiansofture.com",
+                "http://colombiansofture.com:30199",
+                "https://colombiansofture.com:30199"
+            )
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+
+    // Para desarrollo, permitir cualquier origen
+    options.AddPolicy("AllowDevelopment", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
@@ -162,9 +183,9 @@ app.UseSwaggerUI(c =>
 
 app.UseMiddleware<ExceptionMiddleware>();
 
- app.UseCors("AllowAll");
+app.UseCors(app.Environment.IsDevelopment() ? "AllowDevelopment" : "AllowSpecificOrigins");
 
- app.UseAuthentication();
+app.UseAuthentication();
  app.UseAuthorization();
 
  app.MapControllers();

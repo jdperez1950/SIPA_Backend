@@ -23,6 +23,8 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .Matches(@"[0-9]").WithMessage("La contraseña debe contener al menos un número");
 
         RuleFor(x => x.Role)
-            .IsInEnum().WithMessage("Rol inválido");
+            .NotEmpty().WithMessage("El rol es requerido")
+            .Must(role => new[] { "ADMIN", "ASESOR", "SPAT", "CONSULTA", "ORGANIZACION" }.Contains(role.ToUpper()))
+            .WithMessage("Rol inválido. Roles válidos: ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION");
     }
 }

@@ -8,4 +8,5 @@ public interface IApplicationAuthService
     Task<AuthResponse> RegisterAsync(RegisterRequest request);
     Task<bool> ValidateTokenAsync(string token);
     Task<RestorePasswordResponse> RestorePasswordAsync(RestorePasswordRequest request);
+    Task<PagedResponse<UserDto>> GetUsersAsync(GetAllUsersRequest request);
 }
