@@ -134,6 +134,7 @@ builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IQuestionDefinitionRepository, QuestionDefinitionRepository>();
 builder.Services.AddScoped<IProjectResponseRepository, ProjectResponseRepository>();
+builder.Services.AddScoped<IAxisRepository, AxisRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationAuthService, ApplicationAuthService>();

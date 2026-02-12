@@ -52,3 +52,8 @@ public interface IProjectResponseRepository : IRepository<ProjectResponse>
     Task<IEnumerable<ProjectResponse>> GetByEvaluationStatusAsync(EvaluationStatus status);
     Task<IEnumerable<ProjectResponse>> GetByAdvisorAsync(Guid advisorId);
 }
+
+public interface IAxisRepository : IRepository<Axis>
+{
+    Task<Axis?> GetByCodeAsync(string code);
+}
