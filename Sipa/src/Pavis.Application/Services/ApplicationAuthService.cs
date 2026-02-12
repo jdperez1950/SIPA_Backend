@@ -14,17 +14,20 @@ public class ApplicationAuthService : IApplicationAuthService
     private readonly IAuthService _authService;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
 
     public ApplicationAuthService(
         IAuthService authService,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
+        IEmailService emailService,
         IMapper mapper)
     {
         _authService = authService;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
         _mapper = mapper;
     }
 
@@ -54,10 +57,27 @@ public class ApplicationAuthService : IApplicationAuthService
             throw new ArgumentException($"Rol inválido: {request.Role}. Roles válidos: ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION");
         }
 
-        var user = await _authService.RegisterAsync(request.Name, request.Email, request.Password, userRole);
+        // Generar contraseña aleatoria
+        var temporaryPassword = GenerateRandomPassword();
+        
+        var user = await _authService.RegisterAsync(request.Name, request.Email, temporaryPassword, userRole);
         await _unitOfWork.SaveChangesAsync();
 
-        var (token, _) = await _authService.LoginAndReturnUserAsync(request.Email, request.Password);
+        // Enviar correo con la contraseña
+        if (_emailService.IsConfigured)
+        {
+            try
+            {
+                await _emailService.SendWelcomeEmailAsync(user.Email, user.Name, temporaryPassword);
+            }
+            catch (Exception ex)
+            {
+                // Loggear error pero no fallar el registro
+                Console.WriteLine($"Error al enviar correo de bienvenida: {ex.Message}");
+            }
+        }
+
+        var (token, _) = await _authService.LoginAndReturnUserAsync(request.Email, temporaryPassword);
         var userDto = _mapper.Map<UserDto>(user);
 
         return new AuthResponse
@@ -217,5 +237,35 @@ public class ApplicationAuthService : IApplicationAuthService
             Message = $"Usuario {newStatus.ToString().ToLower()} exitosamente",
             User = userDto
         };
+    }
+
+    private string GenerateRandomPassword()
+    {
+        const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+        
+        var random = new Random();
+        var password = new System.Text.StringBuilder();
+        
+        // Asegurar al menos un caracter de cada tipo
+        password.Append(uppercase[random.Next(uppercase.Length)]);
+        password.Append(lowercase[random.Next(lowercase.Length)]);
+        password.Append(digits[random.Next(digits.Length)]);
+        password.Append(special[random.Next(special.Length)]);
+        
+        // Completar con caracteres aleatorios hasta 12 caracteres
+        const string allChars = uppercase + lowercase + digits + special;
+        for (int i = 4; i < 12; i++)
+        {
+            password.Append(allChars[random.Next(allChars.Length)]);
+        }
+        
+        // Mezclar los caracteres
+        var array = password.ToString().ToCharArray();
+        random.Shuffle(array);
+        
+        return new string(array);
     }
 }
