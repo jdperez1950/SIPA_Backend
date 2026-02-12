@@ -27,6 +27,15 @@ public interface IOrganizationRepository : IRepository<Organization>
 {
     Task<Organization?> GetByIdentifierAsync(string identifier);
     Task<IEnumerable<User>> GetUsersByOrganizationAsync(Guid organizationId);
+    Task<Organization> GetOrCreateByIdentifierAsync(
+        string identifier,
+        string name,
+        OrganizationType type,
+        string email,
+        string municipality,
+        string region,
+        string? description = null,
+        string? address = null);
 }
 
 public interface IProjectRepository : IRepository<Project>
@@ -36,6 +45,8 @@ public interface IProjectRepository : IRepository<Project>
     Task<IEnumerable<Project>> GetByOrganizationAsync(Guid organizationId);
     Task<IEnumerable<Project>> GetByStatusAsync(ProjectStatus status);
     Task<(IEnumerable<Project> projects, int total)> GetPaginatedAsync(int page, int limit, string? search = null);
+    Task<(IEnumerable<Project> projects, int total)> GetPaginatedByCreatorAsync(int page, int limit, string? search = null, Guid creatorId = default);
+    Task<bool> CodeExistsAsync(string code);
 }
 
 public interface IQuestionDefinitionRepository : IRepository<QuestionDefinition>

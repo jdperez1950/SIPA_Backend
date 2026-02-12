@@ -6,6 +6,7 @@ namespace Pavis.Domain.Entities;
 public class Project : BaseEntity
 {
     public string Code { get; private set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
     public string OrganizationName { get; private set; } = string.Empty;
     public string Municipality { get; private set; } = string.Empty;
     public string State { get; private set; } = string.Empty;
@@ -18,14 +19,16 @@ public class Project : BaseEntity
     public DateTime? CorrectionDeadline { get; private set; }
     public ProjectProgress Progress { get; private set; }
     public Guid OrganizationId { get; private set; }
+    public Guid? CreatedById { get; private set; }
 
-    protected Project() 
+    protected Project()
     {
         Progress = new ProjectProgress();
     }
 
     public Project(
         string code,
+        string name,
         string organizationName,
         string municipality,
         string state,
@@ -33,10 +36,12 @@ public class Project : BaseEntity
         DateTime endDate,
         DateTime submissionDeadline,
         Guid organizationId,
+        Guid? createdById = null,
         ProjectStatus status = ProjectStatus.ACTIVE,
         ViabilityScenario viabilityStatus = ViabilityScenario.PRE_HABILITADO)
     {
         Code = code;
+        Name = name;
         OrganizationName = organizationName;
         Municipality = municipality;
         State = state;
@@ -44,6 +49,7 @@ public class Project : BaseEntity
         EndDate = endDate;
         SubmissionDeadline = submissionDeadline;
         OrganizationId = organizationId;
+        CreatedById = createdById;
         Status = status;
         ViabilityStatus = viabilityStatus;
         Progress = new ProjectProgress();
@@ -79,6 +85,20 @@ public class Project : BaseEntity
         UpdateTimestamp();
     }
 
+    public void UpdateName(string name)
+    {
+        Name = name;
+        UpdateTimestamp();
+    }
+
     public bool IsActive => Status == ProjectStatus.ACTIVE;
     public bool IsEditable => Status == ProjectStatus.ACTIVE;
+
+    public static string GenerateProjectCode()
+    {
+        var year = DateTime.UtcNow.Year;
+        var random = new Random();
+        var code = random.Next(1, 10000).ToString("D4");
+        return $"PRJ-{year}-{code}";
+    }
 }

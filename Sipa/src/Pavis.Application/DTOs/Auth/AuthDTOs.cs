@@ -157,38 +157,6 @@ public class GetAllUsersRequest
 }
 
 /// <summary>
-/// Response paginado genérico
-/// </summary>
-/// <typeparam name="T">Tipo de datos</typeparam>
-public class PagedResponse<T>
-{
-    /// <summary>
-    /// Lista de datos
-    /// </summary>
-    public IEnumerable<T> Data { get; set; } = Enumerable.Empty<T>();
-
-    /// <summary>
-    /// Número total de elementos
-    /// </summary>
-    public int Total { get; set; }
-
-    /// <summary>
-    /// Número de página actual
-    /// </summary>
-    public int Page { get; set; }
-
-    /// <summary>
-    /// Cantidad de elementos por página
-    /// </summary>
-    public int Limit { get; set; }
-
-    /// <summary>
-    /// Total de páginas
-    /// </summary>
-    public int TotalPages => (int)Math.Ceiling((double)Total / Limit);
-}
-
-/// <summary>
 /// Request para actualizar información de un usuario (solo ADMIN)
 /// </summary>
 public class UpdateUserRequest

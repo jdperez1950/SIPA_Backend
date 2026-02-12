@@ -1,5 +1,6 @@
 using AutoMapper;
 using Pavis.Application.DTOs.Auth;
+using Pavis.Application.DTOs.Common;
 using Pavis.Application.Interfaces;
 using Pavis.Domain.Entities;
 using Pavis.Domain.Enums;

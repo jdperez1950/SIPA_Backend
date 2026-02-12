@@ -11,18 +11,22 @@ public class Organization : BaseEntity
     public string Municipality { get; private set; } = string.Empty;
     public string Region { get; private set; } = string.Empty;
     public string? ContactName { get; private set; }
+    public string? Description { get; private set; }
+    public string? Address { get; private set; }
     public OrganizationStatus Status { get; private set; }
     public Guid? UserId { get; private set; }
 
     protected Organization() { }
 
     public Organization(
-        string name, 
-        OrganizationType type, 
-        string identifier, 
-        string email, 
-        string municipality, 
+        string name,
+        OrganizationType type,
+        string identifier,
+        string email,
+        string municipality,
         string region,
+        string? description = null,
+        string? address = null,
         OrganizationStatus status = OrganizationStatus.ACTIVE)
     {
         Name = name;
@@ -31,6 +35,8 @@ public class Organization : BaseEntity
         Email = email;
         Municipality = municipality;
         Region = region;
+        Description = description;
+        Address = address;
         Status = status;
     }
 
