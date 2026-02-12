@@ -58,4 +58,29 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         return (projects, total);
     }
+
+    public async Task<(IEnumerable<Project> projects, int total)> GetPaginatedByCreatorAsync(int page, int limit, string? search = null, Guid creatorId = default)
+    {
+        var query = _dbSet.Where(p => p.DeletedAt == null && p.CreatedById == creatorId);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Code.Contains(search) || p.OrganizationName.Contains(search));
+        }
+
+        var total = await query.CountAsync();
+        var projects = await query
+            .OrderBy(p => p.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (projects, total);
+    }
+
+    public async Task<bool> CodeExistsAsync(string code)
+    {
+        return await _dbSet
+            .AnyAsync(p => p.Code == code && p.DeletedAt == null);
+    }
 }

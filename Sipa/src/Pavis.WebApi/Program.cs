@@ -117,6 +117,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "ADMIN"));
+    options.AddPolicy("ConsultaOrAdmin", policy => policy.RequireClaim(ClaimTypes.Role, "CONSULTA", "ADMIN"));
     options.AddPolicy("AdvisorOnly", policy => policy.RequireClaim(ClaimTypes.Role, "ASESOR", "ADMIN"));
     options.AddPolicy("SpatOnly", policy => policy.RequireClaim(ClaimTypes.Role, "SPAT", "ADMIN"));
     options.AddPolicy("OrganizationOnly", policy => policy.RequireClaim(ClaimTypes.Role, "ORGANIZACION", "ADMIN"));
@@ -137,6 +138,7 @@ builder.Services.AddScoped<IProjectResponseRepository, ProjectResponseRepository
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApplicationAuthService, ApplicationAuthService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 
 // Servicio de correo - Fácil de reemplazar:
 // Para usar servicio real (SendGrid, AWS SES, etc.), crea una clase que implemente IEmailService

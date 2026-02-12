@@ -1,4 +1,5 @@
 using Pavis.Application.DTOs.Auth;
+using Pavis.Application.DTOs.Common;
 
 namespace Pavis.Application.Interfaces;
 
