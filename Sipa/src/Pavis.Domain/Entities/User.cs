@@ -58,4 +58,27 @@ public class User : BaseEntity
         PasswordHash = newPasswordHash;
         UpdateTimestamp();
     }
+
+    public void UpdateInfo(string? name = null, string? email = null, string? avatarColor = null)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            Name = name;
+        }
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            Email = email;
+        }
+        if (!string.IsNullOrWhiteSpace(avatarColor))
+        {
+            AvatarColor = avatarColor;
+        }
+        UpdateTimestamp();
+    }
+
+    public void UpdateRole(UserRole role)
+    {
+        Role = role;
+        UpdateTimestamp();
+    }
 }

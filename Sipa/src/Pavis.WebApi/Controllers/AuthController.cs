@@ -245,4 +245,114 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResponse<PagedResponse<UserDto>>.Fail("Error interno del servidor"));
         }
     }
+
+    /// <summary>
+    /// Actualizar información de un usuario (solo ADMIN)
+    /// </summary>
+    /// <param name="request">Datos del usuario a actualizar</param>
+    /// <returns>Usuario actualizado</returns>
+    /// <remarks>
+    /// Requiere autenticación con rol ADMIN.
+    /// Permite actualizar nombre, email, rol y color de avatar.
+    /// El email debe ser único en el sistema.
+    /// </remarks>
+    /// <response code="200">Usuario actualizado exitosamente</response>
+    /// <response code="400">Datos inválidos o email duplicado</response>
+    /// <response code="401">Usuario no autenticado</response>
+    /// <response code="403">Usuario no tiene permisos de administrador</response>
+    /// <response code="500">Error interno del servidor</response>
+    [HttpPatch("users")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<UserUpdateResponse>>> UpdateUser([FromBody] UpdateUserRequest request)
+    {
+        try
+        {
+            var validator = new UpdateUserRequestValidator();
+            var validationResult = await validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                return BadRequest(ApiResponse<UserUpdateResponse>.Fail("Datos inválidos", errors));
+            }
+
+            _logger.LogInformation("Update user attempt for ID: {UserId}", request.Id);
+            var result = await _authService.UpdateUserAsync(request);
+            return Ok(ApiResponse<UserUpdateResponse>.Ok(result, result.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Update user failed for ID: {UserId}", request.Id);
+            return BadRequest(ApiResponse<UserUpdateResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user");
+            return StatusCode(500, ApiResponse<UserUpdateResponse>.Fail("Error interno del servidor"));
+        }
+    }
+
+    /// <summary>
+    /// Activar o desactivar un usuario (solo ADMIN)
+    /// </summary>
+    /// <param name="request">ID del usuario y nuevo estado</param>
+    /// <returns>Usuario actualizado</returns>
+    /// <remarks>
+    /// Requiere autenticación con rol ADMIN.
+    /// Un usuario INACTIVE no puede iniciar sesión.
+    /// El ADMIN no puede desactivarse a sí mismo.
+    /// </remarks>
+    /// <response code="200">Estado del usuario actualizado exitosamente</response>
+    /// <response code="400">Datos inválidos</response>
+    /// <response code="401">Usuario no autenticado</response>
+    /// <response code="403">Usuario no tiene permisos de administrador o intenta desactivarse a sí mismo</response>
+    /// <response code="500">Error interno del servidor</response>
+    [HttpPatch("users/status")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<UserUpdateResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<UserUpdateResponse>>> ToggleUserStatus([FromBody] ToggleUserStatusRequest request)
+    {
+        try
+        {
+            var validator = new ToggleUserStatusRequestValidator();
+            var validationResult = await validator.ValidateAsync(request);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                return BadRequest(ApiResponse<UserUpdateResponse>.Fail("Datos inválidos", errors));
+            }
+
+            // Prevenir que un admin se desactive a sí mismo
+            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserId == request.Id.ToString())
+            {
+                _logger.LogWarning("Admin attempted to deactivate themselves");
+                return Forbid("No puedes desactivar tu propia cuenta");
+            }
+
+            _logger.LogInformation("Toggle user status for ID: {UserId} to {Status}", request.Id, request.Status);
+            var result = await _authService.ToggleUserStatusAsync(request);
+            return Ok(ApiResponse<UserUpdateResponse>.Ok(result, result.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Toggle user status failed for ID: {UserId}", request.Id);
+            return BadRequest(ApiResponse<UserUpdateResponse>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error toggling user status");
+            return StatusCode(500, ApiResponse<UserUpdateResponse>.Fail("Error interno del servidor"));
+        }
+    }
 }

@@ -187,3 +187,71 @@ public class PagedResponse<T>
     /// </summary>
     public int TotalPages => (int)Math.Ceiling((double)Total / Limit);
 }
+
+/// <summary>
+/// Request para actualizar información de un usuario (solo ADMIN)
+/// </summary>
+public class UpdateUserRequest
+{
+    /// <summary>
+    /// ID del usuario a actualizar
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
+    /// Nombre del usuario (opcional)
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// Email del usuario (opcional)
+    /// </summary>
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// Rol del usuario (opcional) - ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION
+    /// </summary>
+    public string? Role { get; set; }
+
+    /// <summary>
+    /// Color del avatar para UI (opcional)
+    /// </summary>
+    public string? AvatarColor { get; set; }
+}
+
+/// <summary>
+/// Request para activar/desactivar un usuario (solo ADMIN)
+/// </summary>
+public class ToggleUserStatusRequest
+{
+    /// <summary>
+    /// ID del usuario a activar/desactivar
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
+    /// Nuevo estado del usuario (ACTIVE, INACTIVE)
+    /// </summary>
+    public string Status { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Response de usuario actualizado
+/// </summary>
+public class UserUpdateResponse
+{
+    /// <summary>
+    /// ID del usuario
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
+    /// Mensaje de respuesta
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Usuario actualizado
+    /// </summary>
+    public UserDto User { get; set; } = null!;
+}

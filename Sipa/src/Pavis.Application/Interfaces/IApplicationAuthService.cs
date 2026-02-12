@@ -9,4 +9,6 @@ public interface IApplicationAuthService
     Task<bool> ValidateTokenAsync(string token);
     Task<RestorePasswordResponse> RestorePasswordAsync(RestorePasswordRequest request);
     Task<PagedResponse<UserDto>> GetUsersAsync(GetAllUsersRequest request);
+    Task<UserUpdateResponse> UpdateUserAsync(UpdateUserRequest request);
+    Task<UserUpdateResponse> ToggleUserStatusAsync(ToggleUserStatusRequest request);
 }

@@ -140,4 +140,81 @@ public class ApplicationAuthService : IApplicationAuthService
             Limit = request.Limit
         };
     }
+
+    public async Task<UserUpdateResponse> UpdateUserAsync(UpdateUserRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(request.Id);
+        if (user == null)
+        {
+            throw new InvalidOperationException("Usuario no encontrado");
+        }
+
+        // Validar que el nuevo email no esté en uso por otro usuario
+        if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.ToLowerInvariant() != user.Email.ToLowerInvariant())
+        {
+            var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+            if (existingUser != null && existingUser.Id != request.Id)
+            {
+                throw new InvalidOperationException("El email ya está en uso por otro usuario");
+            }
+        }
+
+        // Actualizar información básica
+        user.UpdateInfo(request.Name, request.Email, request.AvatarColor);
+
+        // Actualizar rol si se proporcionó
+        if (!string.IsNullOrWhiteSpace(request.Role))
+        {
+            if (Enum.TryParse<UserRole>(request.Role, true, out var newRole))
+            {
+                user.UpdateRole(newRole);
+            }
+            else
+            {
+                throw new ArgumentException($"Rol inválido: {request.Role}");
+            }
+        }
+
+        await _userRepository.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        var userDto = _mapper.Map<UserDto>(user);
+
+        return new UserUpdateResponse
+        {
+            Id = user.Id,
+            Message = "Usuario actualizado exitosamente",
+            User = userDto
+        };
+    }
+
+    public async Task<UserUpdateResponse> ToggleUserStatusAsync(ToggleUserStatusRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(request.Id);
+        if (user == null)
+        {
+            throw new InvalidOperationException("Usuario no encontrado");
+        }
+
+        if (Enum.TryParse<UserStatus>(request.Status, true, out var newStatus))
+        {
+            user.UpdateStatus(newStatus);
+        }
+        else
+        {
+            throw new ArgumentException($"Estado inválido: {request.Status}");
+        }
+
+        await _userRepository.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        var userDto = _mapper.Map<UserDto>(user);
+
+        return new UserUpdateResponse
+        {
+            Id = user.Id,
+            Message = $"Usuario {newStatus.ToString().ToLower()} exitosamente",
+            User = userDto
+        };
+    }
 }
