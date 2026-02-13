@@ -14,20 +14,32 @@ public class ProjectService : IProjectService
     private readonly IProjectRepository _projectRepository;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IUserProfileRepository _userProfileRepository;
+    private readonly IProjectTeamMemberRepository _projectTeamMemberRepository;
+    private readonly IAuthService _authService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
 
     public ProjectService(
         IProjectRepository projectRepository,
         IOrganizationRepository organizationRepository,
         IUserRepository userRepository,
+        IUserProfileRepository userProfileRepository,
+        IProjectTeamMemberRepository projectTeamMemberRepository,
+        IAuthService authService,
         IUnitOfWork unitOfWork,
+        IEmailService emailService,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
         _organizationRepository = organizationRepository;
         _userRepository = userRepository;
+        _userProfileRepository = userProfileRepository;
+        _projectTeamMemberRepository = projectTeamMemberRepository;
+        _authService = authService;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
         _mapper = mapper;
     }
 
@@ -99,6 +111,12 @@ public class ProjectService : IProjectService
 
         await _projectRepository.AddAsync(project);
         await _unitOfWork.SaveChangesAsync();
+
+        // Procesar equipo de respuesta si se proporciona
+        if (request.ResponseTeam != null && request.ResponseTeam.Any())
+        {
+            await ProcessResponseTeamAsync(project.Id, request.ResponseTeam);
+        }
 
         // Mapear a DTO
         var projectDto = _mapper.Map<ProjectDTO>(project);
@@ -307,5 +325,151 @@ public class ProjectService : IProjectService
                 Limit = request.Limit
             };
         }
+    }
+
+    /// <summary>
+    /// Procesa el equipo de respuesta: busca usuarios existentes o crea nuevos, y los asigna al proyecto
+    /// </summary>
+    private async Task ProcessResponseTeamAsync(Guid projectId, List<ResponseTeamMember> teamMembers)
+    {
+        foreach (var member in teamMembers)
+        {
+            // Buscar usuario por email
+            var user = await _userRepository.GetByEmailAsync(member.Email);
+            
+            if (user == null)
+            {
+                // Crear nuevo usuario con contraseña temporal
+                var temporaryPassword = GenerateRandomPassword();
+                
+                user = await _authService.RegisterAsync(
+                    member.Name,
+                    member.Email,
+                    temporaryPassword,
+                    UserRole.CONSULTA); // Rol base para miembros de equipo
+                
+                // Crear perfil de usuario
+                var userProfile = new UserProfile(
+                    user.Id,
+                    member.Name,
+                    member.DocumentType,
+                    member.DocumentNumber,
+                    member.Phone);
+                
+                await _userProfileRepository.AddAsync(userProfile);
+                
+                // Enviar correo de bienvenida
+                if (_emailService.IsConfigured)
+                {
+                    try
+                    {
+                        await _emailService.SendWelcomeEmailAsync(user.Email, user.Name, temporaryPassword);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Loggear error pero no fallar el proceso
+                        Console.WriteLine($"Error al enviar correo de bienvenida a {user.Email}: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                // Verificar si ya existe perfil, si no, crearlo
+                var existingProfile = await _userProfileRepository.GetByUserIdAsync(user.Id);
+                if (existingProfile == null)
+                {
+                    var userProfile = new UserProfile(
+                        user.Id,
+                        member.Name,
+                        member.DocumentType,
+                        member.DocumentNumber,
+                        member.Phone);
+                    
+                    await _userProfileRepository.AddAsync(userProfile);
+                }
+            }
+            
+            // Verificar si ya está asignado al proyecto
+            var existingAssignment = await _projectTeamMemberRepository.GetByProjectAndUserAsync(projectId, user.Id);
+            if (existingAssignment == null)
+            {
+                // Crear relación proyecto-equipo
+                var projectTeamMember = new ProjectTeamMember(
+                    projectId,
+                    user.Id,
+                    member.RoleInProject);
+                
+                await _projectTeamMemberRepository.AddAsync(projectTeamMember);
+            }
+            else
+            {
+                // Actualizar rol si cambió
+                if (existingAssignment.RoleInProject != member.RoleInProject)
+                {
+                    existingAssignment.UpdateRole(member.RoleInProject);
+                    await _projectTeamMemberRepository.UpdateAsync(existingAssignment);
+                }
+            }
+        }
+        
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private string GenerateRandomPassword()
+    {
+        const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string special = "!@#$%^&*";
+        
+        var random = new Random();
+        var password = new System.Text.StringBuilder();
+        
+        // Asegurar al menos un caracter de cada tipo
+        password.Append(uppercase[random.Next(uppercase.Length)]);
+        password.Append(lowercase[random.Next(lowercase.Length)]);
+        password.Append(digits[random.Next(digits.Length)]);
+        password.Append(special[random.Next(special.Length)]);
+        
+        // Completar con caracteres aleatorios hasta 12 caracteres
+        const string allChars = uppercase + lowercase + digits + special;
+        for (int i = 4; i < 12; i++)
+        {
+            password.Append(allChars[random.Next(allChars.Length)]);
+        }
+        
+        // Mezclar los caracteres
+        var array = password.ToString().ToCharArray();
+        random.Shuffle(array);
+        
+        return new string(array);
+    }
+
+    public async Task<IEnumerable<ProjectTeamMemberDto>> GetProjectTeamAsync(Guid projectId)
+    {
+        var teamMembers = await _projectTeamMemberRepository.GetByProjectIdAsync(projectId);
+        var result = new List<ProjectTeamMemberDto>();
+
+        foreach (var member in teamMembers)
+        {
+            var user = await _userRepository.GetByIdAsync(member.UserId);
+            if (user == null) continue;
+            
+            var profile = await _userProfileRepository.GetByUserIdAsync(user.Id);
+
+            result.Add(new ProjectTeamMemberDto
+            {
+                Id = member.Id,
+                UserId = user.Id,
+                Email = user.Email,
+                Name = profile?.FullName ?? user.Name,
+                RoleInProject = member.RoleInProject,
+                PhoneNumber = profile?.PhoneNumber,
+                DocumentNumber = profile?.DocumentNumber,
+                AssignedAt = member.AssignedAt
+            });
+        }
+
+        return result;
     }
 }

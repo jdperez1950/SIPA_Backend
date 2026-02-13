@@ -12,10 +12,6 @@ public class ProjectTeamMember : BaseEntity
     public Guid UserId { get; private set; }
     public string RoleInProject { get; private set; } = string.Empty; // Ej: "Líder Técnico", "Apoyo Jurídico"
     public DateTime AssignedAt { get; private set; }
-    
-    // Navigation properties
-    public Project Project { get; private set; } = null!;
-    public User User { get; private set; } = null!;
 
     protected ProjectTeamMember() { }
 

@@ -14,9 +14,6 @@ public class UserProfile : BaseEntity
     public string? DocumentNumber { get; private set; }
     public string? PhoneNumber { get; private set; }
     public string? JobTitle { get; private set; } // Cargo en la empresa
-    
-    // Navigation property
-    public User User { get; private set; } = null!;
 
     protected UserProfile() { }
 

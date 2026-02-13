@@ -1,0 +1,44 @@
+{
+  "name": "Proyecto de Innovación Tecnológica 2026",
+  "organization": {
+    "name": "Empresa Innovadora ABC",
+    "identifier": "9001234567",
+    "type": "COMPANY",
+    "email": "contacto@empresaabc.com",
+    "municipality": "Bogotá",
+    "region": "Cundinamarca"
+  },
+  "department": "Cundinamarca",
+  "municipality": "Bogotá",
+  "responseTeam": [
+    {
+      "email": "lider.tecnico@test.com",
+      "name": "Carlos López Rodríguez",
+      "roleInProject": "Líder Técnico",
+      "phone": "3001234567",
+      "documentNumber": "12345678",
+      "documentType": "CC"
+    },
+    {
+      "email": "desarrollador@test.com",
+      "name": "Ana Martínez Silva",
+      "roleInProject": "Desarrolladora Senior",
+      "phone": "3109876543",
+      "documentNumber": "87654321",
+      "documentType": "CC"
+    },
+    {
+      "email": "consultor@test.com",
+      "name": "Pedro Ramírez",
+      "roleInProject": "Consultor Externo",
+      "phone": "3155554444",
+      "documentNumber": "45678912",
+      "documentType": "CE"
+    }
+  ],
+  "dates": {
+    "start": "2026-02-15T00:00:00Z",
+    "end": "2026-12-31T00:00:00Z",
+    "submissionDeadline": "2026-03-15T00:00:00Z"
+  }
+}

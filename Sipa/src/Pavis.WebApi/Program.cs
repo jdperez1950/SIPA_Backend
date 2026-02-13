@@ -131,8 +131,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectTeamMemberRepository, ProjectTeamMemberRepository>();
 builder.Services.AddScoped<IQuestionDefinitionRepository, QuestionDefinitionRepository>();
 builder.Services.AddScoped<IProjectResponseRepository, ProjectResponseRepository>();
 
