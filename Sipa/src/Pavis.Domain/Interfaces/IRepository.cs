@@ -49,6 +49,20 @@ public interface IProjectRepository : IRepository<Project>
     Task<bool> CodeExistsAsync(string code);
 }
 
+public interface IUserProfileRepository : IRepository<UserProfile>
+{
+    Task<UserProfile?> GetByUserIdAsync(Guid userId);
+    Task<UserProfile?> GetByDocumentNumberAsync(string documentNumber);
+}
+
+public interface IProjectTeamMemberRepository : IRepository<ProjectTeamMember>
+{
+    Task<IEnumerable<ProjectTeamMember>> GetByProjectIdAsync(Guid projectId);
+    Task<IEnumerable<ProjectTeamMember>> GetByUserIdAsync(Guid userId);
+    Task<ProjectTeamMember?> GetByProjectAndUserAsync(Guid projectId, Guid userId);
+    Task<bool> ExistsAsync(Guid projectId, Guid userId);
+}
+
 public interface IQuestionDefinitionRepository : IRepository<QuestionDefinition>
 {
     Task<QuestionDefinition?> GetByKeyAsync(string key);

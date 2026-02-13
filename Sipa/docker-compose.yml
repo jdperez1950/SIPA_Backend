@@ -9,22 +9,24 @@ services:
     ports:
       - "5000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=PavisDb;Username=postgres; Password=postgres; Port=5432
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=PavisDb;Username=postgres;Password=postgres;Port=5432
       - JwtSettings__SecretKey=YourSuperSecretKeyForDevelopmentOnly!
       - JwtSettings__Issuer=Pavis.Api
       - JwtSettings__Audience=Pavis.Client
       - JwtSettings__ExpirationMinutes=15
       - JwtSettings__RefreshTokenExpirationDays=7
       - ASPNETCORE_ENVIRONMENT=Development
-      - EmailSettings__SmtpServer=mailhog
-      - EmailSettings__SmtpPort=1025
-      - EmailSettings__FromEmail=noreply@pavis.com
-      - EmailSettings__FromName=PAVIS System
+      # Email Settings: Configurar en appsettings.Development.json
+      # - EmailSettings__SmtpServer=mailhog
+      # - EmailSettings__SmtpPort=1025
+      # - EmailSettings__FromEmail=noreply@pavis.com
+      # - EmailSettings__FromName=PAVIS System
+      # - EmailSettings__DevMode=true
     depends_on:
       postgres:
         condition: service_healthy
-      mailhog:
-        condition: service_started
+      # mailhog:  # Descomentar si se usa MailHog
+      #   condition: service_started
     networks:
       - default
 
@@ -32,9 +34,9 @@ services:
     image: postgres:16-alpine
     container_name: pavis-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: PavisDb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=PavisDb
     ports:
       - "5432:5432"
     volumes:
@@ -51,8 +53,8 @@ services:
     image: mailhog/mailhog
     container_name: pavis-mailhog
     ports:
-      - "1025:1025" # Puerto SMTP
-      - "8025:8025" # Puerto de la interfaz web
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - default
 

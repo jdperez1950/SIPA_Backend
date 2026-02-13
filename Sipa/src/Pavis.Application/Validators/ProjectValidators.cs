@@ -60,12 +60,15 @@ public class CreateProjectRequestValidator : AbstractValidator<CreateProjectRequ
         {
             RuleForEach(x => x.ResponseTeam).ChildRules(member =>
             {
-                member.RuleFor(m => m.UserName)
+                member.RuleFor(m => m.Name)
                     .NotEmpty().WithMessage("El nombre del miembro del equipo es requerido");
 
-                member.RuleFor(m => m.UserEmail)
+                member.RuleFor(m => m.Email)
                     .NotEmpty().WithMessage("El email del miembro del equipo es requerido")
                     .EmailAddress().WithMessage("El formato del email no es válido");
+
+                member.RuleFor(m => m.RoleInProject)
+                    .NotEmpty().WithMessage("El rol en el proyecto es requerido");
 
                 member.RuleFor(m => m.DocumentNumber)
                     .NotEmpty().WithMessage("El número de documento es requerido");

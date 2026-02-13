@@ -17,6 +17,11 @@ public interface IEmailService
     Task SendPasswordResetEmailAsync(string to, string userName, string temporaryPassword);
     
     /// <summary>
+    /// Envía correo de bienvenida con credenciales para nuevo usuario
+    /// </summary>
+    Task SendWelcomeEmailAsync(string to, string userName, string temporaryPassword);
+    
+    /// <summary>
     /// Verifica si el servicio de correo está configurado y disponible
     /// </summary>
     bool IsConfigured { get; }

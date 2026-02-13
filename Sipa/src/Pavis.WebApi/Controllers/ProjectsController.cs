@@ -220,4 +220,42 @@ public class ProjectsController : ControllerBase
             return StatusCode(500, ApiResponse<PagedResponse<ProjectDTO>>.Fail("Error interno del servidor"));
         }
     }
+
+    /// <summary>
+    /// Obtener el equipo de respuesta asignado a un proyecto
+    /// </summary>
+    /// <param name="id">ID del proyecto</param>
+    /// <returns>Lista de miembros del equipo</returns>
+    /// <response code="200">Equipo obtenido exitosamente</response>
+    /// <response code="401">Usuario no autenticado</response>
+    /// <response code="404">Proyecto no encontrado</response>
+    /// <response code="500">Error interno del servidor</response>
+    [HttpGet("{id}/team")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectTeamMemberDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectTeamMemberDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectTeamMemberDto>>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectTeamMemberDto>>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<ProjectTeamMemberDto>>>> GetProjectTeam(Guid id)
+    {
+        try
+        {
+            _logger.LogInformation("Get project team attempt for project ID: {ProjectId}", id);
+            
+            // Verificar que el proyecto existe
+            var project = await _projectService.GetProjectByIdAsync(id);
+            if (project == null)
+            {
+                return NotFound(ApiResponse<IEnumerable<ProjectTeamMemberDto>>.Fail("Proyecto no encontrado"));
+            }
+
+            var team = await _projectService.GetProjectTeamAsync(id);
+            return Ok(ApiResponse<IEnumerable<ProjectTeamMemberDto>>.Ok(team, "Equipo obtenido exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving project team");
+            return StatusCode(500, ApiResponse<IEnumerable<ProjectTeamMemberDto>>.Fail("Error interno del servidor"));
+        }
+    }
 }

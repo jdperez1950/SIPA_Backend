@@ -36,12 +36,6 @@ public class RegisterRequest
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Contraseña del usuario (mínimo 8 caracteres, debe incluir mayúsculas, minúsculas y números)
-    /// </summary>
-    /// <example>Password123!</example>
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
     /// Rol del usuario (enviar como string/texto)
     /// Valores válidos: ADMIN, ASESOR, SPAT, CONSULTA, ORGANIZACION
     /// </summary>

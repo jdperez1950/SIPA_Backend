@@ -47,4 +47,9 @@ public class EmailSettings
     /// Modo desarrollo: no enviar correos reales, solo loggear
     /// </summary>
     public bool DevMode { get; set; } = true;
+
+    /// <summary>
+    /// Usar SSL/TLS
+    /// </summary>
+
 }
