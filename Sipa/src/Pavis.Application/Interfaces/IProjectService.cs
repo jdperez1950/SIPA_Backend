@@ -9,4 +9,5 @@ public interface IProjectService
     Task<ProjectDTO> UpdateProjectAsync(UpdateProjectRequest request);
     Task<ProjectDTO?> GetProjectByIdAsync(Guid id);
     Task<PagedResponse<ProjectDTO>> GetProjectsAsync(GetProjectsRequest request, Guid? userId, string? userRole);
+    Task<IEnumerable<ProjectTeamMemberDto>> GetProjectTeamAsync(Guid projectId);
 }

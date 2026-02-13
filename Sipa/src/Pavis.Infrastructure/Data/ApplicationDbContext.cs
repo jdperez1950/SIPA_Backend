@@ -11,8 +11,10 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<Organization> Organizations { get; set; }
     public DbSet<Project> Projects { get; set; }
+    public DbSet<ProjectTeamMember> ProjectTeamMembers { get; set; }
     public DbSet<QuestionDefinition> Questions { get; set; }
     public DbSet<ProjectResponse> ProjectResponses { get; set; }
 
@@ -82,6 +84,33 @@ public class ApplicationDbContext : DbContext
             {
                 evidence.ToJson();
             });
+        });
+
+        modelBuilder.Entity<UserProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.DocumentNumber).IsUnique();
+            entity.Property(e => e.FullName).IsRequired();
+            entity.HasOne<User>()
+                .WithOne()
+                .HasForeignKey<UserProfile>(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProjectTeamMember>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.ProjectId, e.UserId }).IsUnique();
+            entity.Property(e => e.RoleInProject).IsRequired();
+            entity.HasOne<Project>()
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
